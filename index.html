@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Keyboarding Timed Writing App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  /* ============================
+     THEME A — LIGHT CLASSROOM
+     ============================ */
+
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f7f9fc;
+    color: #222;
+  }
+
+  header {
+    background: #ffffff;
+    padding: 1.2rem 2rem;
+    border-bottom: 2px solid #e3e7ef;
+    text-align: center;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: #2a4b8d;
+  }
+
+  main {
+    max-width: 900px;
+    margin: 2rem auto;
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  }
+
+  /* ============================
+     FORM CONTROLS
+     ============================ */
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-top: 1rem;
+  }
+
+  input[type="text"], select, textarea {
+    width: 100%;
+    padding: 0.7rem;
+    margin-top: 0.4rem;
+    border: 1px solid #cfd6e4;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+
+  textarea {
+    height: 140px;
+    resize: none;
+    background: #fdfdfd;
+  }
+
+  /* ============================
+     BUTTONS
+     ============================ */
+
+  .btn-row {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+  }
+
+  button {
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  #startBtn {
+    background: #2a72d4;
+    color: white;
+  }
+
+  #resetBtn {
+    background: #d9534f;
+    color: white;
+  }
+
+  #startBtn:disabled,
+  #resetBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ============================
+     PASSAGE DISPLAY
+     ============================ */
+
+  #passageBox {
+    background: #f1f4fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #d7ddea;
+    margin-top: 1rem;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  /* ============================
+     STATS GRID
+     ============================ */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .stat {
+    background: #f1f4fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #d7ddea;
+    text-align: center;
+  }
+
+  .stat span.value {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2a4b8d;
+  }
+
+  /* ============================
+     ERROR COLOR STYLES
+     ============================ */
+
+  .error-wrong {
+    color: red;
+    font-weight: bold;
+  }
+
+  .error-missing {
+    color: blue;
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
+  .error-extra {
+    color: orange;
+    font-weight: bold;
+  }
+
+  /* ============================
+     TEACHER MODE TOGGLE
+     ============================ */
+
+  #teacherMode {
+    margin-right: 0.4rem;
+  }
+
+  .teacher-toggle {
+    margin-top: 1.5rem;
+    font-weight: 600;
+  }
+
+  /* ============================
+     TIMER DISPLAY
+     ============================ */
+
+  #timerDisplay {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #2a4b8d;
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+
+</style>
+</head>
+<body>
+  <header>
+    <h1>Keyboarding Timed Writing App</h1>
+  </header>
+
+  <main>
+    <!-- Lesson + Student Info -->
+    <label for="lessonSelect">Select Lesson</label>
+    <select id="lessonSelect"></select>
+
+    <label for="studentId">Student ID</label>
+    <input type="text" id="studentId" placeholder="Enter your Student ID">
+
+  <!-- Teacher Mode Toggle -->
+  <div id="teacherModeContainer">
+     <label class="teacher-toggle">
+      <input type="checkbox" id="teacherMode">
+      Teacher Mode (show passage and full diff alignment)
+     </label>
+  </div>
+
+  <!-- Timer -->
+  <div id="timerDisplay">00:00</div>
+
+  <!-- Passage Display -->
+     <label>Passage</label>
+     <div id="passageBox"></div>
+
+  <!-- Typing Area -->
+     <label for="typingArea">Type the passage here</label>
+  <div
+     id="typingArea"
+     contenteditable="true"
+     spellcheck="false"
+     autocomplete="off"
+     autocorrect="off"
+     autocapitalize="off"
+   ></div>
+
+   <style>
+   .return-symbol {
+     color: red;
+     font-weight: bold;
+     padding: 0 3px;
+   }
+   </style>
+
+   <style>
+     #typingArea {
+     min-height: 120px;
+     border: 1px solid #ccc;
+     padding: 10px;
+     background: white;
+     font-size: 16px;
+   }
+   </style>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button id="startBtn">Start</button>
+      <button id="resetBtn" disabled>Reset</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <span>Characters Typed</span>
+        <span class="value" id="charsTyped">0</span>
+      </div>
+      <div class="stat">
+        <span>Gross WPM</span>
+        <span class="value" id="grossWpm">0</span>
+      </div>
+      <div class="stat">
+        <span>Errors</span>
+        <span class="value" id="errors">0</span>
+      </div>
+      <div class="stat">
+        <span>Accuracy (%)</span>
+        <span class="value" id="accuracy">100</span>
+      </div>
+      <div class="stat">
+        <span>Goal</span>
+        <span class="value" id="goalDisplay">–</span>
+      </div>
+      <div class="stat">
+        <span>Goal Status</span>
+        <span class="value" id="goalStatus">–</span>
+      </div>
+    </div>
+
+    <!-- Error-highlighted text (Teacher Mode) -->
+    <label style="margin-top:2rem;">Error Highlight View</label>
+    <div id="highlightedOutput" style="
+      margin-top:0.5rem;
+      padding:1rem;
+      border-radius:8px;
+      border:1px solid #d7ddea;
+      background:#f9fbff;
+      min-height:3rem;
+      white-space:pre-wrap;
+      line-height:1.5;
+    "></div>
+  </main>
+<script>
+/* ============================================================
+   D2L ROLE DETECTION (Option 1)
+   ============================================================ */
+const params = new URLSearchParams(window.location.search);
+const userRole = params.get('role'); // "Instructor", "Student", etc.
+
+/* ============================================================
+   LESSONS ARRAY — CHUNK 1 (Lessons 1–10)
+   ============================================================ */
+
+const LESSONS = [
+  {
+    id: 'L1',
+    code: '1J',
+    lessonNumber: 1,
+    name: '1-Minute Timed Writing in Lesson 1',
+    durationSeconds: 60,
+    goal: '10 wpm/3e',
+    passage: `Developing strong keyboarding habits requires steady practice and attention to detail. Each session builds accuracy and confidence, helping students type with greater ease.`
+  },
+  {
+    id: 'L2',
+    code: '2I',
+    lessonNumber: 2,
+    name: '1-Minute Timed Writing in Lesson 2',
+    durationSeconds: 60,
+    goal: '11 wpm/3e',
+    passage: `Consistent daily typing improves muscle memory and reduces hesitation. Even short practice periods strengthen technique and support long-term progress.`
+  },
+  {
+    id: 'L3',
+    code: '3H',
+    lessonNumber: 3,
+    name: '1-Minute Timed Writing in Lesson 3',
+    durationSeconds: 60,
+    goal: '12 wpm/3e',
+    passage: `Good posture and proper hand placement are essential for efficient typing. Students who maintain these habits experience fewer errors and greater comfort.`
+  },
+  {
+    id: 'L4',
+    code: '4H',
+    lessonNumber: 4,
+    name: '1-Minute Timed Writing in Lesson 4',
+    durationSeconds: 60,
+    goal: '13 wpm/3e',
+    passage: `Typing with accuracy before speed ensures better results. As students focus on correct keystrokes, their speed naturally increases over time.`
+  },
+  {
+    id: 'L5',
+    code: '5H',
+    lessonNumber: 5,
+    name: '1-Minute Timed Writing in Lesson 5',
+    durationSeconds: 60,
+    goal: '14 wpm/3e',
+    passage: `Regular warm-up exercises prepare the hands for longer typing tasks. These brief activities help students settle into a steady rhythm.`
+  },
+  {
+    id: 'L6',
+    code: '6G',
+    lessonNumber: 6,
+    name: '1-Minute Timed Writing in Lesson 6',
+    durationSeconds: 60,
+    goal: '15 wpm/3e',
+    passage: `Learning to type without looking at the keyboard builds confidence. Touch typing allows students to focus on content rather than key locations.`
+  },
+  {
+    id: 'L7',
+    code: '7G',
+    lessonNumber: 7,
+    name: '1-Minute Timed Writing in Lesson 7',
+    durationSeconds: 60,
+    goal: '16 wpm/3e',
+    passage: `Short typing drills help students refine their technique. Repetition strengthens accuracy and supports smoother, more consistent performance.`
+  },
+  {
+    id: 'L8',
+    code: '8H',
+    lessonNumber: 8,
+    name: '1-Minute Timed Writing in Lesson 8',
+    durationSeconds: 60,
+    goal: '17 wpm/3e',
+    passage: `Typing fluency develops through steady practice and attention to detail. Students who commit to regular sessions see measurable improvement.`
+  },
+  {
+    id: 'L9',
+    code: '9H',
+    lessonNumber: 9,
+    name: '1-Minute Timed Writing in Lesson 9',
+    durationSeconds: 60,
+    goal: '18 wpm/3e',
+    passage: `Accuracy improves when students slow down and focus on each keystroke. Careful typing reduces errors and builds strong habits.`
+  },
+  {
+    id: 'L10',
+    code: '10I',
+    lessonNumber: 10,
+    name: '1-Minute Timed Writing in Lesson 10',
+    durationSeconds: 60,
+    goal: '19 wpm/3e',
+    passage: `Typing with a relaxed posture helps prevent fatigue. Students who stay comfortable during practice maintain better accuracy and endurance.`
+  },
+  {
+    id: 'L11',
+    code: '11I',
+    lessonNumber: 11,
+    name: '2-Minute Timed Writing in Lesson 11',
+    durationSeconds: 120,
+    goal: '19 wpm/5e',
+    passage: `Effective communication in the workplace often depends on clear, well-written messages. Employees who type efficiently can prepare reports, emails, and instructions more quickly. Strong keyboarding skills help reduce errors and improve productivity. As students continue practicing, they gain confidence in their ability to produce accurate work under time pressure.`
+  },
+  {
+    id: 'L12',
+    code: '12G',
+    lessonNumber: 12,
+    name: '2-Minute Timed Writing in Lesson 12',
+    durationSeconds: 120,
+    goal: '20 wpm/5e',
+    passage: `Businesses rely on timely information to make decisions. Employees who type quickly and accurately can record data, prepare summaries, and share updates without delay. Keyboarding proficiency supports smooth workflow and reduces the need for corrections. With consistent practice, students learn to manage longer tasks with greater ease.`
+  },
+  {
+    id: 'L13',
+    code: '13J',
+    lessonNumber: 13,
+    name: '2-Minute Timed Writing in Lesson 13',
+    durationSeconds: 120,
+    goal: '21 wpm/5e',
+    passage: `Professional documents must be clear, organized, and free of errors. Typists who maintain accuracy while working at a steady pace contribute to efficient office operations. Developing strong keyboarding skills allows students to focus on content rather than mechanics. Over time, they become more confident in handling complex assignments.`
+  },
+  {
+    id: 'L14',
+    code: '14I',
+    lessonNumber: 14,
+    name: '2-Minute Timed Writing in Lesson 14',
+    durationSeconds: 120,
+    goal: '22 wpm/5e',
+    passage: `Many workplaces depend on digital communication to coordinate tasks and share information. Employees who type efficiently can respond quickly to messages and prepare detailed reports. Strong keyboarding skills help reduce stress during busy periods and support overall productivity. Regular practice ensures steady improvement.`
+  },
+  {
+    id: 'L15',
+    code: '15G',
+    lessonNumber: 15,
+    name: '2-Minute Timed Writing in Lesson 15',
+    durationSeconds: 120,
+    goal: '23 wpm/5e',
+    passage: `Accurate data entry is essential in fields such as finance, healthcare, and customer service. Typists must maintain focus to avoid costly mistakes. Students who practice regularly develop the ability to work quickly while preserving accuracy. These skills prepare them for a wide range of professional responsibilities.`
+  },
+  {
+    id: 'L16',
+    code: '16I',
+    lessonNumber: 16,
+    name: '2-Minute Timed Writing in Lesson 16',
+    durationSeconds: 120,
+    goal: '24 wpm/5e',
+    passage: `Modern offices rely on technology to manage schedules, track projects, and store information. Employees who type efficiently can complete tasks more quickly and contribute to smooth operations. Keyboarding practice helps students build the confidence needed to handle demanding workloads.`
+  },
+  {
+    id: 'L17',
+    code: '17H',
+    lessonNumber: 17,
+    name: '2-Minute Timed Writing in Lesson 17',
+    durationSeconds: 120,
+    goal: '25 wpm/5e',
+    passage: `Clear written communication helps teams collaborate effectively. Employees who type well can prepare instructions, summaries, and updates with ease. Strong keyboarding skills reduce errors and support professional presentation. Students who practice consistently develop the ability to work efficiently under time constraints.`
+  },
+  {
+    id: 'L18',
+    code: '18H',
+    lessonNumber: 18,
+    name: '2-Minute Timed Writing in Lesson 18',
+    durationSeconds: 120,
+    goal: '26 wpm/5e',
+    passage: `Typing accuracy is essential when preparing formal documents. Errors can distract readers and reduce credibility. Students who focus on correct keystrokes build strong habits that support long-term success. With practice, they learn to balance speed and precision.`
+  },
+  {
+    id: 'L19',
+    code: '19J',
+    lessonNumber: 19,
+    name: '2-Minute Timed Writing in Lesson 19',
+    durationSeconds: 120,
+    goal: '27 wpm/5e',
+    passage: `Efficient keyboarding allows employees to complete tasks more quickly, leaving time for problem-solving and planning. Students who practice regularly develop the ability to type smoothly and confidently. These skills are valuable in nearly every career field.`
+  },
+  {
+    id: 'L20',
+    code: '20G',
+    lessonNumber: 20,
+    name: '2-Minute Timed Writing in Lesson 20',
+    durationSeconds: 120,
+    goal: '28 wpm/5e',
+    passage: `Strong keyboarding skills help employees manage multiple responsibilities. Typing quickly and accurately supports effective communication and reduces the need for revisions. Students who commit to regular practice see steady improvement in both speed and accuracy.`
+  },
+
+  /* ============================
+     3-MINUTE LESSONS (22–46)
+     ============================ */
+
+  {
+    id: 'L22',
+    code: '22C',
+    lessonNumber: 22,
+    name: '3-Minute Timed Writing in Lesson 22',
+    durationSeconds: 180,
+    goal: '28 wpm/5e',
+    passage: `Successful organizations depend on clear communication, efficient workflow, and accurate documentation. Employees who type well can prepare reports, update records, and respond to messages without unnecessary delays. Strong keyboarding skills help reduce errors and ensure that information is presented professionally. As workplaces continue to rely on digital tools, the ability to type quickly and accurately becomes increasingly important. Students who practice regularly develop confidence in their ability to handle longer assignments and meet deadlines. Over time, they learn to maintain a steady pace while preserving accuracy, even when working under pressure.`
+  },
+  {
+    id: 'L24',
+    code: '24D',
+    lessonNumber: 24,
+    name: '3-Minute Timed Writing in Lesson 24',
+    durationSeconds: 180,
+    goal: '29 wpm/5e',
+    passage: `Many businesses rely on digital communication to coordinate projects, share updates, and maintain accurate records. Employees who type efficiently can prepare detailed messages, organize information, and respond promptly to requests. Keyboarding proficiency supports productivity and helps teams stay on schedule. Students who practice regularly develop strong habits that allow them to work confidently and effectively. As they gain experience, they learn to manage longer tasks with greater ease and accuracy. These skills are essential in modern workplaces, where clear communication and timely information are critical to success.`
+  },
+  {
+    id: 'L26',
+    code: '26C',
+    lessonNumber: 26,
+    name: '3-Minute Timed Writing in Lesson 26',
+    durationSeconds: 180,
+    goal: '30 wpm/5e',
+    passage: `Accurate documentation is essential in fields such as healthcare, finance, and customer service. Employees must record information quickly and without errors to ensure smooth operations. Strong keyboarding skills help reduce mistakes and improve efficiency. Students who practice regularly develop the ability to type steadily and confidently, even when handling complex material. Over time, they learn to balance speed and accuracy, producing work that meets professional standards. These skills prepare them for a wide range of responsibilities and help them succeed in fast-paced environments.`
+  },
+  {
+    id: 'L28',
+    code: '28C',
+    lessonNumber: 28,
+    name: '3-Minute Timed Writing in Lesson 28',
+    durationSeconds: 180,
+    goal: '31 wpm/5e',
+    passage: `Effective communication is a cornerstone of successful teamwork. Employees who type well can prepare clear instructions, detailed reports, and timely updates. Keyboarding proficiency supports productivity and reduces the need for revisions. Students who practice regularly develop strong habits that allow them to work efficiently under pressure. As they gain experience, they learn to manage longer assignments with confidence and accuracy. These skills are valuable in any career that requires written communication, data entry, or digital collaboration.`
+  },
+  {
+    id: 'L30',
+    code: '30D',
+    lessonNumber: 30,
+    name: '3-Minute Timed Writing in Lesson 30',
+    durationSeconds: 180,
+    goal: '32 wpm/5e',
+    passage: `Modern workplaces rely heavily on digital tools to manage information, coordinate tasks, and support decision-making. Employees who type efficiently can prepare documents, update records, and communicate effectively with colleagues. Strong keyboarding skills help reduce errors and improve productivity. Students who practice regularly develop the ability to work steadily and confidently, even when handling complex material. Over time, they learn to maintain accuracy while increasing their speed, preparing them for a wide range of professional responsibilities.`
+  },
+  {
+    id: 'L32',
+    code: '32C',
+    lessonNumber: 32,
+    name: '3-Minute Timed Writing in Lesson 32',
+    durationSeconds: 180,
+    goal: '33 wpm/5e',
+    passage: `Clear written communication helps organizations operate smoothly and efficiently. Employees who type well can prepare detailed reports, organize information, and respond promptly to requests. Keyboarding proficiency supports productivity and reduces the need for corrections. Students who practice regularly develop strong habits that allow them to work confidently under time constraints. As they gain experience, they learn to manage longer assignments with greater ease and accuracy. These skills are essential in modern workplaces, where timely information and professional presentation are critical.`
+  },
+  {
+    id: 'L36',
+    code: '36C',
+    lessonNumber: 36,
+    name: '3-Minute Timed Writing in Lesson 36',
+    durationSeconds: 180,
+    goal: '35 wpm/4e',
+    passage: `Accurate data entry is essential in many industries, including finance, logistics, and healthcare. Employees must record information quickly and without errors to ensure smooth operations. Strong keyboarding skills help reduce mistakes and improve efficiency. Students who practice regularly develop the ability to type steadily and confidently, even when handling complex material. Over time, they learn to balance speed and accuracy, producing work that meets professional standards. These skills prepare them for a wide range of responsibilities and help them succeed in fast-paced environments.`
+  },
+  {
+    id: 'L38',
+    code: '38C',
+    lessonNumber: 38,
+    name: '3-Minute Timed Writing in Lesson 38',
+    durationSeconds: 180,
+    goal: '35 wpm/4e',
+    passage: `Effective communication supports teamwork, problem-solving, and customer service. Employees who type well can prepare clear messages, detailed reports, and timely updates. Keyboarding proficiency supports productivity and reduces the need for revisions. Students who practice regularly develop strong habits that allow them to work efficiently under pressure. As they gain experience, they learn to manage longer assignments with confidence and accuracy. These skills are valuable in any career that requires written communication or digital collaboration.`
+  },
+  {
+    id: 'L42',
+    code: '42C',
+    lessonNumber: 42,
+    name: '3-Minute Timed Writing in Lesson 42',
+    durationSeconds: 180,
+    goal: '36 wpm/3e',
+    passage: `Organizations depend on accurate documentation to track progress, maintain records, and support decision-making. Employees who type efficiently can prepare reports, update databases, and communicate effectively with colleagues. Strong keyboarding skills help reduce errors and improve productivity. Students who practice regularly develop the ability to work steadily and confidently, even when handling complex material. Over time, they learn to maintain accuracy while increasing their speed, preparing them for a wide range of professional responsibilities.`
+  },
+  {
+    id: 'L44',
+    code: '44D',
+    lessonNumber: 44,
+    name: '3-Minute Timed Writing in Lesson 44',
+    durationSeconds: 180,
+    goal: '37 wpm/3e',
+    passage: `Clear written communication is essential in customer service, project management, and administrative work. Employees who type well can prepare detailed messages, organize information, and respond promptly to requests. Keyboarding proficiency supports productivity and reduces the need for corrections. Students who practice regularly develop strong habits that allow them to work confidently under time constraints. As they gain experience, they learn to manage longer assignments with greater ease and accuracy.`
+  },
+  {
+    id: 'L46',
+    code: '46C',
+    lessonNumber: 46,
+    name: '3-Minute Timed Writing in Lesson 46',
+    durationSeconds: 180,
+    goal: '37 wpm/3e',
+    passage: `Accurate and timely communication helps organizations operate smoothly and efficiently. Employees who type well can prepare reports, update records, and respond quickly to messages. Strong keyboarding skills help reduce errors and improve productivity. Students who practice regularly develop the ability to work steadily and confidently, even when handling complex material. These skills prepare them for a wide range of professional responsibilities.`
+  },
+
+  /* ============================
+     5-MINUTE LESSONS (52, 54)
+     ============================ */
+
+  {
+    id: 'L52',
+    code: '52-C',
+    lessonNumber: 52,
+    name: '5-Minute Timed Writing in Lesson 52',
+    durationSeconds: 300,
+    goal: '39 wpm/5e',
+    passage: `Successful organizations rely on clear communication, accurate documentation, and efficient workflow to achieve their goals. Employees who type well can prepare detailed reports, update records, and respond promptly to messages. Strong keyboarding skills help reduce errors and ensure that information is presented professionally. As workplaces continue to rely on digital tools, the ability to type quickly and accurately becomes increasingly important. Students who practice regularly develop confidence in their ability to handle longer assignments and meet deadlines. Over time, they learn to maintain a steady pace while preserving accuracy, even when working under pressure. Effective communication supports teamwork, problem-solving, and customer service. Employees who type well can prepare clear messages, detailed reports, and timely updates. Keyboarding proficiency supports productivity and reduces the need for revisions. Students who practice regularly develop strong habits that allow them to work efficiently under pressure. As they gain experience, they learn to manage longer assignments with confidence and accuracy. These skills are valuable in any career that requires written communication or digital collaboration.`
+  },
+  {
+    id: 'L54',
+    code: '54D',
+    lessonNumber: 54,
+    name: '5-Minute Timed Writing in Lesson 54',
+    durationSeconds: 300,
+    goal: '39 wpm/5e',
+    passage: `Modern workplaces depend on accurate documentation to track progress, maintain records, and support decision-making. Employees who type efficiently can prepare reports, update databases, and communicate effectively with colleagues. Strong keyboarding skills help reduce errors and improve productivity. Students who practice regularly develop the ability to work steadily and confidently, even when handling complex material. Over time, they learn to maintain accuracy while increasing their speed, preparing them for a wide range of professional responsibilities. Clear written communication is essential in customer service, project management, and administrative work. Employees who type well can prepare detailed messages, organize information, and respond promptly to requests. Keyboarding proficiency supports productivity and reduces the need for corrections. Students who practice regularly develop strong habits that allow them to work confidently under time constraints. As they gain experience, they learn to manage longer assignments with greater ease and accuracy. These skills are essential in modern workplaces, where timely information and professional presentation are critical to success.`
+  },
+]; // END OF LESSONS ARRAY
+
+const attemptHistory = {};
+
+/* ============================================================
+   DOM REFERENCES
+   ============================================================ */
+const lessonSelect      = document.getElementById('lessonSelect');
+const studentIdInput    = document.getElementById('studentId');
+const passageBox        = document.getElementById('passageBox');
+const typingArea        = document.getElementById('typingArea');
+const startBtn          = document.getElementById('startBtn');
+const resetBtn          = document.getElementById('resetBtn');
+const timerDisplay      = document.getElementById('timerDisplay');
+const charsTypedEl      = document.getElementById('charsTyped');
+const grossWpmEl        = document.getElementById('grossWpm');
+const errorsEl          = document.getElementById('errors');
+const accuracyEl        = document.getElementById('accuracy');
+const goalDisplayEl     = document.getElementById('goalDisplay');
+const goalStatusEl      = document.getElementById('goalStatus');
+const highlightedOutput = document.getElementById('highlightedOutput');
+const teacherModeChk    = document.getElementById('teacherMode');
+const teacherModeContainer = document.getElementById('teacherModeContainer');
+
+/* ============================================================
+   APPLY D2L ROLE SETTINGS NOW THAT DOM EXISTS
+   ============================================================ */
+if (userRole === "Instructor") {
+  // Teacher Mode ON and unlocked
+  teacherModeChk.checked = true;
+  teacherModeChk.disabled = false;
+} else {
+  teacherModeChk.checked = false;
+  teacherModeChk.disabled = true;
+  teacherModeContainer.style.display = 'none';
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let totalSeconds = 0;
+let remainingSeconds = 0;
+let timerInterval = null;
+let waitingForFirstKey = false;
+let currentLesson = null;
+
+/* ============================================================
+   STARTUP
+   ============================================================ */
+populateLessons();
+lessonSelect.value = LESSONS[0].id;
+loadLesson(LESSONS[0].id);
+
+lessonSelect.addEventListener('change', () => {
+  loadLesson(lessonSelect.value);
+});
+
+/* ============================================================
+   POPULATE LESSON DROPDOWN
+   ============================================================ */
+function populateLessons() {
+  LESSONS.forEach(lesson => {
+    const opt = document.createElement('option');
+    opt.value = lesson.id;
+    opt.textContent = lesson.name; // Option B: full descriptive name
+    lessonSelect.appendChild(opt);
+  });
+}
+
+
+/* ============================================================
+   LOAD LESSON
+   ============================================================ */
+function loadLesson(lessonId) {
+  currentLesson = LESSONS.find(l => l.id === lessonId);
+  if (!currentLesson) return;
+
+  passageBox.textContent = currentLesson.passage;
+  goalDisplayEl.textContent = currentLesson.goal;
+
+  totalSeconds = currentLesson.durationSeconds;
+  remainingSeconds = totalSeconds;
+  updateTimerDisplay();
+
+  resetSession(false);
+}
+
+
+/* ============================================================
+   TIMER FUNCTIONS
+   ============================================================ */
+function updateTimerDisplay() {
+  const m = Math.floor(remainingSeconds / 60);
+  const s = remainingSeconds % 60;
+  timerDisplay.textContent =
+    String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function startTimer() {
+  if (timerInterval) return;
+
+  timerInterval = setInterval(() => {
+    remainingSeconds--;
+    if (remainingSeconds <= 0) {
+      remainingSeconds = 0;
+      updateTimerDisplay();
+      stopTimer();
+      return;
+    }
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+
+  typingArea.contentEditable = "false";
+  startBtn.disabled = false;
+  resetBtn.disabled = false;
+
+  updateResults();
+
+  const attempt = {
+    studentId: studentIdInput.value.trim(),
+    lessonId: currentLesson.id,
+    lessonName: currentLesson.name,
+    timestamp: new Date().toISOString(),
+    wpm: Number(grossWpmEl.textContent),
+    errors: Number(errorsEl.textContent),
+    accuracy: Number(accuracyEl.textContent),
+    goal: currentLesson.goal,
+    goalMet: goalStatusEl.textContent === 'Goal Met',
+    typedText: typingArea.innerText
+  };
+
+  if (!attemptHistory[attempt.studentId]) {
+    attemptHistory[attempt.studentId] = [];
+  }
+  attemptHistory[attempt.studentId].push(attempt);
+
+  console.log("Attempt saved:", attempt);
+
+  // AUTO‑SUBMIT TO GOOGLE SHEETS
+  fetch("https://script.google.com/macros/s/AKfycbzjBC59L6rsSsxGDnxd8jjiYodd5dpA-lVmzAtlnvlpL1Lctazj0UEOV0TPSEb1hdPEcg/exec", {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(attempt)
+  })
+  .then(() => console.log("Auto-submitted to Google Sheets"))
+  .catch(err => console.error("Submit error:", err));
+}
+
+/* ============================================================
+   RESET SESSION
+   ============================================================ */
+function resetSession(clearText = true) {
+  clearInterval(timerInterval);
+  timerInterval = null;
+
+  waitingForFirstKey = false;
+  remainingSeconds = totalSeconds;
+  updateTimerDisplay();
+
+  if (clearText) typingArea.innerText = '';
+
+  typingArea.contentEditable = "false";
+  startBtn.disabled = false;
+  resetBtn.disabled = true;
+
+  charsTypedEl.textContent = '0';
+  grossWpmEl.textContent = '0';
+  errorsEl.textContent = '0';
+  accuracyEl.textContent = '100';
+  goalStatusEl.textContent = '–';
+  goalStatusEl.style.color = '#2a4b8d';
+
+  highlightedOutput.innerHTML = '';
+
+  passageBox.style.visibility = 'visible';
+}
+
+function updateResults() {
+  const typed = typingArea.innerText;
+  const target = passageBox.innerText;
+
+  const errors = countErrors(typed, target);
+  highlightErrors(typed, target);
+
+  updateStats(typed, errors);
+}
+
+/* ============================================================
+   ALLIGN WORDS
+   ============================================================ */
+function alignWords(typedWords, targetWords) {
+  const m = typedWords.length;
+  const n = targetWords.length;
+
+  const dp = Array.from({ length: m + 1 }, () =>
+    Array(n + 1).fill(0)
+  );
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = typedWords[i - 1] === targetWords[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  let i = m, j = n;
+  const aligned = [];
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
+      aligned.push({ type: "extra", typed: typedWords[i - 1], target: null });
+      i--;
+    } else if (j > 0 && dp[i][j] === dp[i][j - 1] + 1) {
+      aligned.push({ type: "missing", typed: null, target: targetWords[j - 1] });
+      j--;
+    } else {
+      const type =
+        typedWords[i - 1] === targetWords[j - 1] ? "match" : "sub";
+      aligned.push({
+        type,
+        typed: typedWords[i - 1],
+        target: targetWords[j - 1]
+      });
+      i--;
+      j--;
+    }
+  }
+
+  return aligned.reverse();
+}
+
+/* ============================================================
+   ERROR COUNTING (WORD-BASED)
+   ============================================================ */
+function countErrors(typed, target) {
+
+  // ⭐ MUST be first
+  const typedNormalized = typed.replace(/\n/g, " <RETURN> ");
+
+  const spacePunctErrors = (typedNormalized.match(/\s+[.,!?;:]/g) || []).length;
+
+  const typedClean  = typedNormalized.replace(/\s+([.,!?;:])/g, '$1');
+  const typedWords  = typedClean.trim().split(/\s+/);
+  const targetWords = target.trim().split(/\s+/);
+
+  const aligned = alignWords(typedWords, targetWords);
+
+  let errors = spacePunctErrors;
+
+  aligned.forEach(a => {
+    if (a.type !== "match") errors++;
+  });
+
+  return errors;
+}
+
+/* ============================================================
+   MAP RAW WORDS
+   ============================================================ */
+function mapRawToClean(rawWords, cleanWords) {
+  const map = [];
+  let r = 0;
+
+  for (let c = 0; c < cleanWords.length; c++) {
+    // rawWords may contain split punctuation or space-before-period artifacts
+    // so we advance rawWords until we find a raw word that matches the clean word
+    while (r < rawWords.length && rawWords[r].replace(/\s+([.,!?;:])/g, '$1') !== cleanWords[c]) {
+      r++;
+    }
+    map[c] = r;
+    r++;
+  }
+
+  return map;
+}
+
+/* ============================================================
+   HIGHLIGHT ERRORS (TEACHER MODE ONLY)
+   ============================================================ */
+function highlightErrors(typed, target) {
+  // TEMP: always show highlights while we verify behavior
+  // (you can restore the student-mode guard later)
+  // if (!teacherModeChk.checked && timerInterval !== null && remainingSeconds > 0) {
+  //   highlightedOutput.innerHTML = '';
+  //   return;
+  // }
+
+  if (!typed || !target || typed.trim().length === 0) {
+    highlightedOutput.innerHTML = '';
+    return;
+  }
+
+  // ⭐ MUST be first
+  const typedNormalized = typed.replace(/\n/g, " <RETURN> ");
+
+  // Clean for alignment
+  const typedClean   = typedNormalized.replace(/\s+([.,!?;:])/g, '$1');
+  const rawWords     = typedNormalized.trim().split(/\s+/);
+  const cleanWords   = typedClean.trim().split(/\s+/);
+  const targetWords  = target.trim().split(/\s+/);
+
+  const aligned = alignWords(cleanWords, targetWords);
+
+  const parts = [];
+  let rawIndex = 0;
+  let cleanIndex = 0;
+
+  aligned.forEach(step => {
+    if (rawWords[rawIndex] === "<RETURN>") {
+	  parts.push(`<span class="error-extra return-symbol">↵</span>`);
+	  rawIndex++;
+	  return;
+    }
+    if (step.type === 'match') {
+      parts.push(rawWords[rawIndex]);
+      rawIndex++;
+      cleanIndex++;
+    }
+    else if (step.type === 'sub') {
+      parts.push(`<span class="error-wrong">${rawWords[rawIndex]}</span>`);
+      rawIndex++;
+      cleanIndex++;
+    }
+    else if (step.type === 'extra') {
+      parts.push(`<span class="error-extra">${rawWords[rawIndex]}</span>`);
+      rawIndex++;
+      cleanIndex++;
+    }
+    else if (step.type === 'missing') {
+      parts.push(`<span class="error-missing">_</span>`);
+    }
+  });
+
+  // ⭐ Append leftover raw words (fixes cutoff)
+  while (rawIndex < rawWords.length) {
+    parts.push(rawWords[rawIndex]);
+    rawIndex++;
+  }
+
+  let html = parts.join(' ');
+  html = html.replace(/\s+([.,!?;:])/g, m =>
+    `<span class="error-wrong">${m}</span>`
+  );
+
+  highlightedOutput.innerHTML = html;
+}
+
+/* ============================================================
+   UPDATE STATS
+   ============================================================ */
+function updateStats() {
+  if (!currentLesson) return;
+
+  const text = typingArea.innerText;
+  const target = currentLesson.passage;
+
+  // Characters typed
+  const charsTyped = text.length;
+  charsTypedEl.textContent = charsTyped;
+
+  // Gross WPM
+  const elapsedSeconds = totalSeconds - remainingSeconds;
+  const minutes = elapsedSeconds > 0 ? elapsedSeconds / 60 : 1 / 60;
+  const grossWpm = Math.round((charsTyped / 5) / minutes);
+  grossWpmEl.textContent = isFinite(grossWpm) ? grossWpm : 0;
+
+  // Errors
+  const errors = countErrors(text, target);
+  errorsEl.textContent = errors;
+
+  // Accuracy
+  const totalWords = target.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const accuracy = Math.max(0, Math.round(((totalWords - errors) / totalWords) * 100));
+  accuracyEl.textContent = accuracy;
+
+  // Goal check
+  const [goalWpm, goalErrors] = currentLesson.goal
+    .replace(' wpm/', ',')
+    .replace('e', '')
+    .split(',')
+    .map(Number);
+
+  if (grossWpm >= goalWpm && errors <= goalErrors) {
+    goalStatusEl.textContent = 'Goal Met';
+    goalStatusEl.style.color = 'green';
+  } else {
+    goalStatusEl.textContent = 'Not Met';
+    goalStatusEl.style.color = 'red';
+  }
+
+  // Highlighting (Teacher Mode only)
+  highlightErrors(text, target);
+}
+
+
+/* ============================================================
+   EVENT HANDLERS
+   ============================================================ */
+startBtn.addEventListener('click', () => {
+  if (!currentLesson) return;
+
+  const studentId = studentIdInput.value.trim();
+  if (!studentId) {
+    alert('Please enter your Student ID before starting.');
+    return;
+  }
+
+  typingArea.contentEditable = "true";
+  typingArea.focus();
+  waitingForFirstKey = true;
+
+  startBtn.disabled = true;
+  resetBtn.disabled = false;
+});
+
+// Reset button
+resetBtn.addEventListener('click', () => {
+  resetSession(true);
+});
+
+// Typing input handler
+typingArea.addEventListener('input', () => {
+  if (waitingForFirstKey) {
+    waitingForFirstKey = false;
+    startTimer();
+  }
+  updateStats();
+});
+
+// Teacher Mode toggle
+teacherModeChk.addEventListener('change', () => {
+  // Passage ALWAYS visible (Option A)
+  passageBox.style.visibility = 'visible';
+
+  // Highlighting only in Teacher Mode
+  highlightErrors(typingArea.innerText, currentLesson?.passage || '');
+});
+
+/* ============================================================
+   COPY / PASTE / SELECTION PROTECTION
+   ============================================================ */
+
+// 1. BLOCK PASTE INTO TYPING AREA
+typingArea.addEventListener('paste', e => {
+  e.preventDefault();
+});
+
+// 2. BLOCK COPY FROM PASSAGE
+passageBox.addEventListener('copy', e => {
+  e.preventDefault();
+});
+
+// 3. BLOCK RIGHT-CLICK CONTEXT MENU ON PASSAGE
+passageBox.addEventListener('contextmenu', e => {
+  e.preventDefault();
+});
+
+// 4. BLOCK TEXT SELECTION IN PASSAGE
+passageBox.style.userSelect = 'none';
+passageBox.style.webkitUserSelect = 'none';
+passageBox.style.msUserSelect = 'none';
+
+// 5. BLOCK KEYBOARD SHORTCUTS (Ctrl+C, Ctrl+V, Ctrl+X, Cmd+C/V/X)
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && ['c','v','x','a'].includes(e.key.toLowerCase())) {
+    e.preventDefault();
+  }
+});
+
+// 6. BLOCK DRAG-AND-DROP INTO TYPING AREA
+typingArea.addEventListener('drop', e => {
+  e.preventDefault();
+});
+
+// 7. BLOCK MIDDLE-CLICK PASTE (Linux / some browsers)
+typingArea.addEventListener('mousedown', e => {
+  if (e.button === 1) e.preventDefault();
+});
+
+typingArea.setAttribute('spellcheck', 'false');
+typingArea.setAttribute('autocomplete', 'off');
+typingArea.setAttribute('autocorrect', 'off');
+typingArea.setAttribute('autocapitalize', 'off');
+
+</script>
+</body>
+</html>
