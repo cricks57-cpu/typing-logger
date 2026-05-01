@@ -745,7 +745,7 @@ function stopTimer() {
     accuracy: Number(accuracyEl.textContent),
     goal: currentLesson.goal,
     goalMet: goalStatusEl.textContent === 'Goal Met',
-    typedText: typingArea.innerText
+    typedText: typingArea.innerText,
   };
 
   if (!attemptHistory[attempt.studentId]) {
@@ -762,6 +762,7 @@ fetch("https://script.google.com/macros/s/AKfycbzjBC59L6rsSsxGDnxd8jjiYodd5dpA-l
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(attempt)
 });
+}
 
 /* ============================================================
    RESET SESSION
