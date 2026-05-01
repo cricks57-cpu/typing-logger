@@ -756,15 +756,12 @@ function stopTimer() {
   console.log("Attempt saved:", attempt);
 
   // AUTO‑SUBMIT TO GOOGLE SHEETS
-  fetch("https://script.google.com/macros/s/AKfycbzjBC59L6rsSsxGDnxd8jjiYodd5dpA-lVmzAtlnvlpL1Lctazj0UEOV0TPSEb1hdPEcg/exec", {
+fetch("https://script.google.com/macros/s/AKfycbzjBC59L6rsSsxGDnxd8jjiYodd5dpA-lVmzAtlnvlpL1Lctazj0UEOV0TPSEb1hdPEcg/exec", {
     method: "POST",
     mode: "no-cors",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(attempt)
-  })
-  .then(() => console.log("Auto-submitted to Google Sheets"))
-  .catch(err => console.error("Submit error:", err));
-}
+});
 
 /* ============================================================
    RESET SESSION
