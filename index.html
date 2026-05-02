@@ -736,32 +736,34 @@ function stopTimer() {
   updateResults();
 
 const attempt = {
-  ID: studentIdInput.value.trim(),                 // Student ID
-  Code: currentLesson.id,                          // GDP code (1J, 2I, etc.)
-  Lesson: currentLesson.name,                      // Lesson name
-  Attempt: attemptHistory[studentIdInput.value.trim()]?.length + 1 || 1,
-  WPM: Number(grossWpmEl.textContent),             // Gross WPM
-  Errors: Number(errorsEl.textContent),            // Error count
-  Time: Number(timeSecondsEl.textContent),         // Duration in seconds
-  Goal: currentLesson.goal,                        // Goal (e.g., 10 wpm/3e)
-  Text: typingArea.innerText,                      // Typed text
-  Timestamp: new Date().toISOString()              // ISO timestamp
+  ID: studentIdInput.value.trim(),
+  Code: currentLesson.id,
+  Lesson: currentLesson.name,
+  Attempt: (attemptHistory[studentIdInput.value.trim()]?.length || 0) + 1,
+  WPM: Number(grossWpmEl.textContent),
+  Errors: Number(errorsEl.textContent),
+  Time: Number(timeSecondsEl.textContent),
+  Goal: currentLesson.goal,
+  Text: typingArea.innerText,
+  Timestamp: new Date().toISOString()
 };
 
-  if (!attemptHistory[attempt.studentId]) {
-    attemptHistory[attempt.studentId] = [];
-  }
-  attemptHistory[attempt.studentId].push(attempt);
+// FIXED: use attempt.ID instead of attempt.studentId
+if (!attemptHistory[attempt.ID]) {
+  attemptHistory[attempt.ID] = [];
+}
+attemptHistory[attempt.ID].push(attempt);
 
-  console.log("Attempt saved:", attempt);
+console.log("Attempt saved:", attempt);
 
-  // AUTO‑SUBMIT TO GOOGLE SHEETS
+// AUTO‑SUBMIT TO GOOGLE SHEETS
 fetch("https://script.google.com/macros/s/AKfycbzjBC59L6rsSsxGDnxd8jjiYodd5dpA-lVmzAtlnvlpL1Lctazj0UEOV0TPSEb1hdPEcg/exec", {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(attempt)
+  method: "POST",
+  mode: "no-cors",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(attempt)
 });
+
 }
 
 /* ============================================================
