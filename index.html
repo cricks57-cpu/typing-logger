@@ -735,18 +735,18 @@ function stopTimer() {
 
   updateResults();
 
-  const attempt = {
-    studentId: studentIdInput.value.trim(),
-    lessonId: currentLesson.id,
-    lessonName: currentLesson.name,
-    timestamp: new Date().toISOString(),
-    wpm: Number(grossWpmEl.textContent),
-    errors: Number(errorsEl.textContent),
-    accuracy: Number(accuracyEl.textContent),
-    goal: currentLesson.goal,
-    goalMet: goalStatusEl.textContent === 'Goal Met',
-    typedText: typingArea.innerText,
-  };
+const attempt = {
+  ID: studentIdInput.value.trim(),                 // Student ID
+  Code: currentLesson.id,                          // GDP code (1J, 2I, etc.)
+  Lesson: currentLesson.name,                      // Lesson name
+  Attempt: attemptHistory[studentIdInput.value.trim()]?.length + 1 || 1,
+  WPM: Number(grossWpmEl.textContent),             // Gross WPM
+  Errors: Number(errorsEl.textContent),            // Error count
+  Time: Number(timeSecondsEl.textContent),         // Duration in seconds
+  Goal: currentLesson.goal,                        // Goal (e.g., 10 wpm/3e)
+  Text: typingArea.innerText,                      // Typed text
+  Timestamp: new Date().toISOString()              // ISO timestamp
+};
 
   if (!attemptHistory[attempt.studentId]) {
     attemptHistory[attempt.studentId] = [];
